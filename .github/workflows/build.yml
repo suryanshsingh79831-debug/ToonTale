@@ -14,7 +14,16 @@ jobs:
       - name: Add the app page
         run: |
           mkdir -p app/src/main/assets
-          cp "$(ls -1 *.html | head -n 1)" app/src/main/assets/index.html
+          if ls *.html >/dev/null 2>&1; then
+            cp "$(ls -1 *.html | head -n 1)" app/src/main/assets/index.html
+          else
+            command -v 7z >/dev/null 2>&1 || sudo apt-get install -y p7zip-full
+            mkdir -p unpacked
+            for z in *.7z; do 7z x "$z" -ounpacked -y; done
+            for z in *.zip; do [ -f "$z" ] && unzip -o "$z" -d unpacked; done
+            cp "$(find unpacked -name '*.html' | head -n 1)" app/src/main/assets/index.html
+          fi
+          ls -la app/src/main/assets
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
